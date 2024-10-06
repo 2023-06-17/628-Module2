@@ -1,0 +1,89 @@
+---
+title: "variable_selection"
+author: "Ruiyuan Ming"
+date: "2024-10-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(leaps)
+library(boot)
+```
+
+```{r}
+bodyfat <- read.csv('BodyFat_Cleaned.csv')
+head(bodyfat)
+```
+
+```{r}
+leaps1 <- regsubsets(BODYFAT~AGE+WEIGHT+HEIGHT+NECK+CHEST+ABDOMEN+HIP+THIGH+KNEE+ANKLE+BICEPS+FOREARM+WRIST,data=bodyfat,nbest=13)
+plot(leaps1,scale='adjr2')
+```
+
+```{r}
+leaps2 <- regsubsets(BODYFAT~AGE+ADIPOSITY+NECK+CHEST+ABDOMEN+HIP+THIGH+KNEE+ANKLE+BICEPS+FOREARM+WRIST,data=bodyfat,nbest=12)
+plot(leaps2,scale='adjr2')
+```
+
+```{r}
+shrinkage <- function(fit, k =10) {
+  require(bootstrap)
+  
+  theta.fit <- function(x,y){lsfit(x,y)}
+  theta.predict <- function(fit,x){cbind(1,x)%*%fit$coef}
+  
+  x <- fit$model[,2:ncol(fit$model)]
+  y <- fit$model[,1]
+  results <- crossval(x,y,theta.fit,theta.predict,ngroup=k)
+  r2 <- cor(y,fit$fitted.values)^2
+  r2cv <- cor(y,results$cv.fit)^2
+  cat("Original R-square =",r2,"\n")
+  cat(k,"Fold Cross-Validated R-square =", r2cv, "\n")
+  cat("Change =", r2-r2cv, "\n")
+}
+```
+
+```{r}
+fit <- lm(BODYFAT~AGE+WEIGHT+HEIGHT+NECK+CHEST+ABDOMEN+HIP+THIGH+KNEE+ANKLE+BICEPS+FOREARM+WRIST,data=bodyfat)
+shrinkage(fit)
+```
+
+```{r}
+fit1 <- lm(BODYFAT~AGE+WEIGHT+NECK+ABDOMEN+HIP+THIGH+FOREARM+WRIST,data=bodyfat)
+shrinkage(fit1)
+```
+
+```{r}
+# 定义Bootstrap函数，返回模型的R²
+data <- bodyfat
+boot_r2 <- function(data, indices) {
+  # Bootstrap抽样
+  boot_sample <- data[indices, ]
+  
+  # 拟合线性回归模型
+  model <- lm(BODYFAT ~ AGE + WEIGHT + NECK + ABDOMEN + HIP + THIGH + FOREARM + WRIST, data = boot_sample)
+  
+  # 返回R²值
+  return(summary(model)$r.squared)
+}
+
+# 执行Bootstrap，重复1000次
+set.seed(123)
+bootstrap_results_r2 <- boot(data = data, statistic = boot_r2, R = 1000)
+
+# 提取Bootstrap R²结果
+r2_values <- bootstrap_results_r2$t
+
+# 绘制Bootstrap R²分布图
+hist(r2_values, breaks = 30, col = "lightgreen", border = "black", 
+     main = "Bootstrap R-Squared Distribution", 
+     xlab = "R-Squared", ylab = "Frequency")
+
+# 添加网格线和图表样式
+grid()
+```
+
