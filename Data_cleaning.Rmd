@@ -1,0 +1,89 @@
+---
+title: "Module2"
+author: "Shixin Zhang"
+date: "2024-10-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(dplyr)
+```
+
+```{r}
+bodyfat_data <- read.csv("BodyFat.csv", header = TRUE)
+head(bodyfat_data)
+```
+```{r}
+# convert weight to kg and height to m
+bodyfat_data_cleaned <- bodyfat_data %>%
+  mutate(Weight_kg = WEIGHT * 0.453,
+         Height_m = HEIGHT * 0.0254)
+
+# calculate the bmi based on their weight and height
+bodyfat_data_cleaned <- bodyfat_data_cleaned %>%
+  mutate(Calculated_Adiposity = Weight_kg / (Height_m^2))
+
+# 计算理论上的体脂率 (根据公式)
+bodyfat_data_cleaned$BODYFAT_cal <- 495 / bodyfat_data$DENSITY - 450
+
+summary(bodyfat_data_cleaned)
+
+
+```
+
+
+```{r}
+# find abnormal data, can change threshold
+threshold <- 5
+abnormal_data <- bodyfat_data_cleaned %>%
+  filter(abs(Calculated_Adiposity - ADIPOSITY) > threshold)
+
+# 找出不符合该公式的观测值，设定一个允许的误差范围（比如 0.5%）
+tolerance <- 2  # 可以根据需要调整
+bodyfat_data_cleaned$deviation <- abs(bodyfat_data_cleaned$BODYFAT_cal - bodyfat_data_cleaned$BODYFAT)
+
+# 筛选出偏差大于允许范围的行
+invalid_rows <- bodyfat_data_cleaned[bodyfat_data_cleaned$deviation > tolerance, ]
+
+
+# calculate height based on the BMI and put back to the dataset
+recalculate_abnormal_values <- function(row) {
+  if (abs(row["Calculated_Adiposity"] - row["ADIPOSITY"]) > threshold) {
+        row["Height_m"] <- sqrt(row["Weight_kg"] / row["ADIPOSITY"])
+        row["HEIGHT"] <- row["Height_m"] /0.0254  # Convert back to inches
+  }
+  return(row)
+}
+abnormal_data_corrected <- as.data.frame(t(apply(abnormal_data, 1, recalculate_abnormal_values)))
+for(i in 1:nrow(abnormal_data_corrected)) {
+  row_id <- abnormal_data_corrected$IDNO[i]
+  index <- which(bodyfat_data_cleaned$IDNO == row_id)
+  bodyfat_data_cleaned$WEIGHT[index] <- abnormal_data_corrected$WEIGHT[i]
+  bodyfat_data_cleaned$HEIGHT[index] <- abnormal_data_corrected$HEIGHT[i]
+}
+
+```
+
+```{r}
+# bodyfat column data cleaning
+# ID=48 and ID=216: bodyfat is abnormal, we change bodyfat
+# ID=96 and ID=182: density is abnormal, we retain bodyfat
+# ID=76: bodyfat is abnormal, we change bodyfat (based on ID=48)
+bodyfat_data_cleaned[48,]$BODYFAT <- bodyfat_data_cleaned[48,]$BODYFAT_cal
+bodyfat_data_cleaned[76,]$BODYFAT <- bodyfat_data_cleaned[76,]$BODYFAT_cal
+bodyfat_data_cleaned[216,]$BODYFAT <- bodyfat_data_cleaned[216,]$BODYFAT_cal
+
+```
+
+
+```{r}
+# write to the csv
+bodyfat_data_cleaned <- bodyfat_data_cleaned %>%
+  select(-Weight_kg, -Height_m, -Calculated_Adiposity, -BODYFAT_cal, -deviation)
+write.csv(bodyfat_data_cleaned, "BodyFat_Cleaned.csv", row.names = FALSE)
+```
