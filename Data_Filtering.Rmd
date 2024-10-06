@@ -1,0 +1,159 @@
+---
+title: "Bodyfat_filtering"
+author: "Shixin Zhang"
+date: "2024-10-06"
+output: html_document
+---
+
+```{r setup}
+```
+
+
+```{r}
+library(readr)
+library(dplyr)
+```
+
+```{r}
+bodyfat_data <- read.csv("BodyFat.csv")
+
+
+
+
+# 0数据可视化
+hist(bodyfat_data$ANKLE, main="Ankle Circumference Distribution", xlab="Ankle Circumference (cm)", col="lightblue", breaks=20)
+
+# 绘制膝围的直方图
+hist(bodyfat_data$KNEE, main="Knee Circumference Distribution", xlab="Knee Circumference (cm)", col="lightgreen", breaks=20)
+
+# 绘制大腿围的直方图
+hist(bodyfat_data$THIGH, main="Thigh Circumference Distribution", xlab="Thigh Circumference (cm)", col="lightcoral", breaks=20)
+
+# 绘制臀围的直方图
+hist(bodyfat_data$HIP, main="Hip Circumference Distribution", xlab="Hip Circumference (cm)", col="lightyellow", breaks=20)
+
+```
+
+
+
+```{r}
+# 下半身数据清理
+
+
+#1 用文献+自己调整的阈值进行膝盖和大腿的比例，臀部和大腿的比例范围，脚踝和膝盖的比例，筛选，有问题的写TRUE，首选问题≥2
+# 设置调整后的阈值范围
+knee_thigh_min <- 0.55
+knee_thigh_max <- 0.80
+
+hip_thigh_min <- 1.45
+hip_thigh_max <- 1.75
+
+ankle_knee_min <- 0.55
+ankle_knee_max <- 0.85
+
+# 创建标记列，标记是否不符合任意比例条件
+bodyfat_data$knee_thigh_flag <- (bodyfat_data$KNEE < knee_thigh_min * bodyfat_data$THIGH | bodyfat_data$KNEE > knee_thigh_max * bodyfat_data$THIGH)
+bodyfat_data$hip_thigh_flag <- (bodyfat_data$HIP < hip_thigh_min * bodyfat_data$THIGH | bodyfat_data$HIP > hip_thigh_max * bodyfat_data$THIGH)
+bodyfat_data$ankle_knee_flag <- (bodyfat_data$ANKLE < ankle_knee_min * bodyfat_data$KNEE | bodyfat_data$ANKLE > ankle_knee_max * bodyfat_data$KNEE)
+
+# 筛选出在所有三个条件上都异常的数据
+# 创建标记列，标记是否不符合任意比例条件
+bodyfat_data$knee_thigh_flag <- (bodyfat_data$KNEE < knee_thigh_min * bodyfat_data$THIGH | bodyfat_data$KNEE > knee_thigh_max * bodyfat_data$THIGH)
+bodyfat_data$hip_thigh_flag <- (bodyfat_data$HIP < hip_thigh_min * bodyfat_data$THIGH | bodyfat_data$HIP > hip_thigh_max * bodyfat_data$THIGH)
+bodyfat_data$ankle_knee_flag <- (bodyfat_data$ANKLE < ankle_knee_min * bodyfat_data$KNEE | bodyfat_data$ANKLE > ankle_knee_max * bodyfat_data$KNEE)
+
+bodyfat_data$abnormal_count <- bodyfat_data$knee_thigh_flag + bodyfat_data$hip_thigh_flag + bodyfat_data$ankle_knee_flag
+
+# 筛选出至少有两个比例不符合条件的数据
+abnormal_bodyfat_data <- bodyfat_data[bodyfat_data$abnormal_count >= 2, ]
+print(abnormal_bodyfat_data)
+
+
+#2计算IQR (四分位距) 方法筛选异常值
+# 使用IQR (四分位距) 方法筛选异常值，并返回完整的数据行
+filter_outliers_with_id <- function(bodyfat_data, column_name) {
+  column <- bodyfat_data[[column_name]]  # 获取指定列
+  
+  Q1 <- quantile(column, 0.25, na.rm = TRUE)  # 第一四分位数
+  Q3 <- quantile(column, 0.75, na.rm = TRUE)  # 第三四分位数
+  IQR_value <- Q3 - Q1  # 四分位距
+  
+  lower_bound <- Q1 - 1.5 * IQR_value  # 下界
+  upper_bound <- Q3 + 1.5 * IQR_value  # 上界
+  
+  # 筛选出异常值对应的完整数据行
+  return(bodyfat_data[column < lower_bound | column > upper_bound, ])
+}
+
+# 筛选并展示有异常值的行（包含ID）
+ankle_outliers <- filter_outliers_with_id(bodyfat_data, "ANKLE")
+knee_outliers <- filter_outliers_with_id(bodyfat_data, "KNEE")
+thigh_outliers <- filter_outliers_with_id(bodyfat_data, "THIGH")
+hip_outliers <- filter_outliers_with_id(bodyfat_data, "HIP")
+
+# 输出结果
+print("ANKLE Outliers with ID:")
+print(ankle_outliers)
+
+print("KNEE Outliers with ID:")
+print(knee_outliers)
+
+print("THIGH Outliers with ID:")
+print(thigh_outliers)
+
+print("HIP Outliers with ID:")
+print(hip_outliers)
+
+```
+
+
+```{r}
+#上半身数据清洗
+
+
+bodyfat_data$Abdomen_to_Neck <- bodyfat_data$ABDOMEN / bodyfat_data$NECK
+bodyfat_data$Neck_to_Wrist <- bodyfat_data$NECK / bodyfat_data$WRIST
+
+filtered_data_1 <- bodyfat_data[bodyfat_data$Neck_to_Wrist > 2.3, ]
+
+filtered_data_1_IDNO <- filtered_data_1$IDNO
+
+filtered_data_2 <- bodyfat_data[bodyfat_data$Abdomen_to_Neck > 3.0, ]
+
+filtered_data_2_IDNO <- filtered_data_2$IDNO
+
+### 把比例不正常人放到一起
+result_data_1 <- data.frame(IDNO = filtered_data_1$IDNO,
+                             Neck_to_Wrist = filtered_data_1$Neck_to_Wrist)
+
+result_data_2 <- data.frame(IDNO = filtered_data_2$IDNO,
+                             Abdomen_to_Neck = filtered_data_2$Abdomen_to_Neck)
+
+merged_data <- merge(result_data_1, result_data_2, by = "IDNO", all = TRUE)
+
+
+selected_ids <- c(28, 36, 39, 127, 141, 178, 205, 207, 5, 41, 43, 216, 242)
+
+# 从 BodyFat 中筛选出这些 IDNO 的行
+filtered_bodyfat <- bodyfat_data[bodyfat_data$IDNO %in% selected_ids, ]
+
+
+### 筛选体脂率为肥胖的人
+bodyfat_data$Weight_kg <- bodyfat_data$WEIGHT * 0.453592
+bodyfat_data$Height_m <- bodyfat_data$HEIGHT * 0.0254
+  
+bodyfat_data$BMI <- bodyfat_data$Weight_kg / (bodyfat_data$Height_m^2)
+  
+obese_data <- bodyfat_data[bodyfat_data$BMI >= 30, ]
+
+
+### 我们可以发现所筛选出的三人均属于肥胖，因此用阈值来修改对应的Wrist与Abdomen
+bodyfat_data$WRIST[bodyfat_data$IDNO == 39] <- bodyfat_data$NECK[bodyfat_data$IDNO == 39] / 2.3
+bodyfat_data$WRIST[bodyfat_data$IDNO == 205] <- bodyfat_data$NECK[bodyfat_data$IDNO == 205] / 2.3
+  
+bodyfat_data$ABDOMEN[bodyfat_data$IDNO == 242] <- bodyfat_data$NECK[bodyfat_data$IDNO == 242] * 3
+  
+print(bodyfat_data[bodyfat_data$IDNO %in% c(39, 205, 242), ])
+```
+
+
