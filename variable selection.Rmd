@@ -41,49 +41,42 @@ shrinkage <- function(fit, k =10) {
   results <- crossval(x,y,theta.fit,theta.predict,ngroup=k)
   r2 <- cor(y,fit$fitted.values)^2
   r2cv <- cor(y,results$cv.fit)^2
-  cat("Original R-square =",r2,"\n")
-  cat(k,"Fold Cross-Validated R-square =", r2cv, "\n")
-  cat("Change =", r2-r2cv, "\n")
+  return (r2-r2cv)
 }
 ```
 
-```{r}
-fit <- lm(BODYFAT~AGE+WEIGHT+HEIGHT+NECK+CHEST+ABDOMEN+HIP+THIGH+KNEE+ANKLE+BICEPS+FOREARM+WRIST,data=bodyfat)
-shrinkage(fit)
-```
 
 ```{r}
-fit1 <- lm(BODYFAT~AGE+WEIGHT+NECK+ABDOMEN+HIP+THIGH+FOREARM+WRIST,data=bodyfat)
-shrinkage(fit1)
+fit1 <- lm(BODYFAT~ABDOMEN,data=bodyfat)
+fit2 <- lm(BODYFAT~WEIGHT+ABDOMEN,data=bodyfat)
+fit3 <- lm(BODYFAT~WEIGHT+ABDOMEN+WRIST,data=bodyfat)
+fit4 <- lm(BODYFAT~WEIGHT+ABDOMEN+WRIST+FOREARM,data=bodyfat)
+fit5 <- lm(BODYFAT~WEIGHT + ABDOMEN + WRIST + FOREARM + NECK,data=bodyfat)
+fit6 <- lm(BODYFAT~WEIGHT + ABDOMEN + WRIST + FOREARM + NECK + BICEPS,data=bodyfat)
 ```
 
+
 ```{r}
-# 定义Bootstrap函数，返回模型的R²
-data <- bodyfat
-boot_r2 <- function(data, indices) {
-  # Bootstrap抽样
-  boot_sample <- data[indices, ]
-  
-  # 拟合线性回归模型
-  model <- lm(BODYFAT ~ AGE + WEIGHT + NECK + ABDOMEN + HIP + THIGH + FOREARM + WRIST, data = boot_sample)
-  
-  # 返回R²值
-  return(summary(model)$r.squared)
+set.seed(54)
+s <- rep(0,6)
+for(i in 1:1000){
+  s[1] <- s[1] + shrinkage(fit1)
+  s[2] <- s[2] + shrinkage(fit2)
+  s[3] <- s[3] + shrinkage(fit3)
+  s[4] <- s[4] + shrinkage(fit4)
+  s[5] <- s[5] + shrinkage(fit5)
+  s[6] <- s[6] + shrinkage(fit6)
 }
+r <- s/1000
 
-# 执行Bootstrap，重复1000次
-set.seed(123)
-bootstrap_results_r2 <- boot(data = data, statistic = boot_r2, R = 1000)
+variable_count <- 1:6
+r_squared <- r
 
-# 提取Bootstrap R²结果
-r2_values <- bootstrap_results_r2$t
+plot(variable_count, r_squared, type = "o", col = "blue",
+     xlab = "Number of Variables", ylab = "Change of R-squared", 
+     main = "Simplicity and Robustness Trade-off")
 
-# 绘制Bootstrap R²分布图
-hist(r2_values, breaks = 30, col = "lightgreen", border = "black", 
-     main = "Bootstrap R-Squared Distribution", 
-     xlab = "R-Squared", ylab = "Frequency")
-
-# 添加网格线和图表样式
-grid()
+lines(variable_count, r_squared, type = "b", pch = 19, col = "blue")
 ```
+
 
