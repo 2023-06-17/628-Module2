@@ -57,7 +57,7 @@ fit6 <- lm(BODYFAT~WEIGHT + ABDOMEN + WRIST + FOREARM + NECK + BICEPS,data=bodyf
 
 
 ```{r}
-set.seed(54)
+set.seed(1234)
 s <- rep(0,6)
 for(i in 1:1000){
   s[1] <- s[1] + shrinkage(fit1)
