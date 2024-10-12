@@ -71,9 +71,11 @@ for(i in 1:nrow(abnormal_data_corrected)) {
 
 ```{r}
 # bodyfat column data cleaning
-# ID=48 and ID=216: bodyfat is abnormal, we change bodyfat
-# ID=96 and ID=182: density is abnormal, we retain bodyfat
-# ID=76: bodyfat is abnormal, we change bodyfat (based on ID=48)
+
+low_bodyfat <- which(bodyfat_data$BODYFAT < 2)
+# 使用公式替换体脂率低于 2% 的行
+bodyfat_data$BODYFAT[low_bodyfat] <- 1.2 * bodyfat_data$ADIPOSITY[low_bodyfat] + 0.23 * bodyfat_data$AGE[low_bodyfat] - 16.2
+
 bodyfat_data_cleaned[48,]$BODYFAT <- bodyfat_data_cleaned[48,]$BODYFAT_cal
 bodyfat_data_cleaned[76,]$BODYFAT <- bodyfat_data_cleaned[76,]$BODYFAT_cal
 bodyfat_data_cleaned[216,]$BODYFAT <- bodyfat_data_cleaned[216,]$BODYFAT_cal
