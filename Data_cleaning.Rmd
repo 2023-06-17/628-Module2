@@ -28,7 +28,7 @@ bodyfat_data_cleaned <- bodyfat_data %>%
 bodyfat_data_cleaned <- bodyfat_data_cleaned %>%
   mutate(Calculated_Adiposity = Weight_kg / (Height_m^2))
 
-# 计算理论上的体脂率 (根据公式)
+# Calculate the theoretical body fat percentage (according to the formula)
 bodyfat_data_cleaned$BODYFAT_cal <- 495 / bodyfat_data$DENSITY - 450
 
 summary(bodyfat_data_cleaned)
@@ -43,11 +43,11 @@ threshold <- 5
 abnormal_data <- bodyfat_data_cleaned %>%
   filter(abs(Calculated_Adiposity - ADIPOSITY) > threshold)
 
-# 找出不符合该公式的观测值，设定一个允许的误差范围（比如 0.5%）
-tolerance <- 2  # 可以根据需要调整
+# Identify observations that do not fit the formula and set an allowable margin of error
+tolerance <- 2  
 bodyfat_data_cleaned$deviation <- abs(bodyfat_data_cleaned$BODYFAT_cal - bodyfat_data_cleaned$BODYFAT)
 
-# 筛选出偏差大于允许范围的行
+# Filtering out rows with deviations greater than the allowable range
 invalid_rows <- bodyfat_data_cleaned[bodyfat_data_cleaned$deviation > tolerance, ]
 
 
@@ -73,7 +73,7 @@ for(i in 1:nrow(abnormal_data_corrected)) {
 # bodyfat column data cleaning
 
 low_bodyfat <- which(bodyfat_data$BODYFAT < 2)
-# 使用公式替换体脂率低于 2% 的行
+# Use the formula to replace rows with a body fat percentage of less than 2%.
 bodyfat_data$BODYFAT[low_bodyfat] <- 1.2 * bodyfat_data$ADIPOSITY[low_bodyfat] + 0.23 * bodyfat_data$AGE[low_bodyfat] - 16.2
 
 bodyfat_data_cleaned[48,]$BODYFAT <- bodyfat_data_cleaned[48,]$BODYFAT_cal
