@@ -1,6 +1,6 @@
 ---
-title: "Module2"
-author: "Shixin Zhang"
+title: "Data Cleaning"
+author: "ChenghaoLou, Ruiyuan Ming, Minliang Yu, Shixin Zhang"
 date: "2024-10-03"
 output: html_document
 ---
@@ -15,7 +15,7 @@ library(dplyr)
 ```
 
 ```{r}
-bodyfat_data <- read.csv("BodyFat.csv", header = TRUE)
+bodyfat_data <- read.csv("../data/BodyFat.csv", header = TRUE)
 head(bodyfat_data)
 ```
 ```{r}
@@ -30,8 +30,6 @@ bodyfat_data_cleaned <- bodyfat_data_cleaned %>%
 
 # Calculate the theoretical body fat percentage (according to the formula)
 bodyfat_data_cleaned$BODYFAT_cal <- 495 / bodyfat_data$DENSITY - 450
-
-summary(bodyfat_data_cleaned)
 
 
 ```
