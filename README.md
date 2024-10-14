@@ -16,8 +16,8 @@ This project aims to build a simple, robust, and accurate model using various ph
 ## Repository Structure
 - `data/`: Contains the raw and cleaned datasets used in the analysis.
 - `code/`: Includes all R scripts used for data cleaning, analysis, and model building.
-- `images/`: Stores plots and visualizations generated during the analysis.
-- `shiny_app/`: The code and resources for the Shiny app, allowing real-time body fat predictions.
+- `plots/`: Stores plots and visualizations generated during the analysis.
+- `shiny_app/`: The code for the Shiny app, allowing real-time body fat predictions.
   
 ## File Descriptions 
 
