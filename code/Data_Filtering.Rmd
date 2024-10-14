@@ -15,7 +15,7 @@ library(dplyr)
 ```
 
 ```{r}
-bodyfat_data <- read.csv("BodyFat.csv")
+bodyfat_data <- read.csv("../data/BodyFat.csv")
 
 
 

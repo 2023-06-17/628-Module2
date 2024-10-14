@@ -11,7 +11,7 @@ library(car)
 
 
 ```{r}
-data = read.csv("BodyFat_Cleaned.csv")
+data = read.csv("../data/BodyFat_Cleaned.csv")
 model <- lm(BODYFAT ~ WEIGHT + ABDOMEN, data = data)
 ```
 

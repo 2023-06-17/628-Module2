@@ -15,7 +15,7 @@ library(boot)
 ```
 
 ```{r}
-bodyfat <- read.csv('BodyFat_Cleaned.csv')
+bodyfat <- read.csv('../data/BodyFat_Cleaned.csv')
 head(bodyfat)
 ```
 
