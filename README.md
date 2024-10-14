@@ -19,8 +19,12 @@ This project aims to build a simple, robust, and accurate model using various ph
 - `images/`: Stores plots and visualizations generated during the analysis.
 - `shiny_app/`: The code and resources for the Shiny app, allowing real-time body fat predictions.
   
-## Files
+## File Descriptions 
+
 - **data_cleaning.R**: Code for cleaning the dataset, particularly correcting abnormalities in the `bodyfat` and `height` columns.
+  - In this file, data cleaning is focused on weight, height, adiposity, bodyfat, and density.
+  - Calculated Adiposity is based on the formula $\frac{weight}{height^2}$, converting weight to $kg$ and height to $m$, then this value is compared with the true adiposity column in the dataset by $|calculated_adiposity - adiposity|$, setting a tolerance=5 filters one row. By looking at this data point(IDNO=42), height seems abnormal having a value of $29.5 in$. Then, height is recalculated according to adiposity and weight values and put back into the dataset.
+  - Calculated bodyfat percentage is based on the formula $\frac{495}{density} - 450$ provided by Professor Kang. By calculating $|calculated_bodyfat - bodyfat|$, and setting tolerance=2, 5 rows of data are filtered out. After examining the data, bodyfat values in three rows (IDNO=48,76,216) are replaced by the calculated bodyfat. For IDNO=182, bodyfat is 0, and the calculated bodyfat is a negative value, so it seems that both bodyfat and density values are abnormal. In this case, we used $ bodyfat = 1.2 * Adiposity + 0.23 * Age-16.2 $ to recover. And for the last row, IDNO=96, the density is abnormal after examination. Since density will not be used in varaible selection and modelling, we will not handle this case. 
 - **model_building.R**: Code for model selection, statistical analysis, and cross-validation.
 - **app.R**: Shiny app code for interactive body fat prediction based on the final model.
 
