@@ -2,7 +2,7 @@
 
 ## Authors 
 - Chenghao Lou 
-- RuiYuan Ming 
+- Ruiyuan Ming 
 - Minliang Yu 
 - Shixin Zhang
 
@@ -24,8 +24,11 @@ This project aims to build a simple, robust, and accurate model using various ph
 - **data_cleaning.R**: Code for cleaning the dataset, particularly correcting abnormalities in the `bodyfat` and `height` columns.
   - In this file, data cleaning is focused on weight, height, adiposity, bodyfat, and density.
   - Calculated Adiposity is based on the formula $\frac{weight}{height^2}$, converting weight to $kg$ and height to $m$, then this value is compared with the true adiposity column in the dataset by $|calculated_adiposity - adiposity|$, setting a tolerance=5 filters one row. By looking at this data point(IDNO=42), height seems abnormal having a value of $29.5 in$. Then, height is recalculated according to adiposity and weight values and put back into the dataset.
-  - Calculated bodyfat percentage is based on the formula $\frac{495}{density} - 450$ provided by Professor Kang. By calculating $|calculated_bodyfat - bodyfat|$, and setting tolerance=2, 5 rows of data are filtered out. After examining the data, bodyfat values in three rows (IDNO=48,76,216) are replaced by the calculated bodyfat. For IDNO=182, bodyfat is 0, and the calculated bodyfat is a negative value, so it seems that both bodyfat and density values are abnormal. In this case, we used $ bodyfat = 1.2 * Adiposity + 0.23 * Age-16.2 $ to recover. And for the last row, IDNO=96, the density is abnormal after examination. Since density will not be used in varaible selection and modelling, we will not handle this case. 
-- **model_building.R**: Code for model selection, statistical analysis, and cross-validation.
+  - Calculated bodyfat percentage is based on the formula $\frac{495}{density} - 450$ provided by Professor Kang. By calculating $|calculated_bodyfat - bodyfat|$, and setting tolerance=2, 5 rows of data are filtered out. After examining the data, bodyfat values in three rows (IDNO=48,76,216) are replaced by the calculated bodyfat. For IDNO=182, bodyfat is 0, and the calculated bodyfat is a negative value, so it seems that both bodyfat and density values are abnormal. In this case, we used $ bodyfat = 1.2 * Adiposity + 0.23 * Age-16.2 $ to recover. And, for the last row, IDNO=96, the density is abnormal after examination. Since density will not be used in variable selection and modeling, we will not handle this case.
+- **Data_Filtering.Rmd**: Code for reviewing all other columns excluding height, weight, adiposity, bodyfat, and density in the dataset for inconsistencies.
+  - we did not find any other measurements that significantly stood out. Therefore, no corrections were made to other variables.
+- **Check_Assumptions.Rmd**: Code for checking and and plotting regression model assumptions
+- **Model_Building.R**: Code for variable selection, modeling, and bootstrapping 
 - **app.R**: Shiny app code for interactive body fat prediction based on the final model.
 
 ## Statistical Analysis
@@ -46,7 +49,7 @@ https://628nodie.shinyapps.io/Bodayfat/
    git clone https://github.com/2023-06-17/628-Module2
 2. Install necessary R packages: Install the required R libraries by running the following in R:
    ```bash
-   install.packages(c("shiny", "ggplot2", "dplyr"))
+   install.packages(c("shiny", "ggplot2", "dplyr","car"))
 3. Open the shiny_app/app.R file and run it in your RStudio environment.
 
 ## Contact
